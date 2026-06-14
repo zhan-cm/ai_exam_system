@@ -1,0 +1,60 @@
+1.查询所有轮播图列表接口
+    接口分析：
+        参数：无
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": [       =》将查询到的轮播图放在data属性即可
+            		{
+            			"id": 1,
+            			"title": "智能考试系统介绍",
+            			"description": "基于AI技术的智能考试平台，支持在线考试、智能组卷等功能",
+            			"imageUrl": "https://example.com/images/banner1.jpg",
+            			"linkUrl": "https://example.com/about",
+            			"sortOrder": 1,
+            			"isActive": true,
+            			"createTime": ""
+            		}
+            	]
+            }
+    业务分析：
+        单表的全部查询
+        集成了mybatis-plus / 通用service(优先) / 通用的mapper
+        直接可以在controller完成查询梳理
+    实现过程：
+        1.查询所有的轮播图数据集合
+        2.将集合装入result类中
+        -- 日志输出 info -> 输出本次查询结果
+        3.返回结果
+    注意事项：
+        1.集成了日志@Sl4fj+log.info输出
+        2.没有根据sortOrder字段 正序排序
+        3.有些字段不要但是返回了，例如：updateTime , isDeleted
+            因为返回的json是由实体类转化的
+            默认：实体类有什么属性，就生成什么json的key
+            忽略：忽略某些属性，不生成key，需要额外配置
+            controller -> 方法handler -> java实体类 -> springmvc[ handlerAdapter -> jackson(json)] -> 前端 -> json
+            总结：实体类 - json第三方包 jackson包 - json
+            总结： 讲解jackson提供了哪些配置注解，可以忽略实体类属性不生成对应的jsonKey
+                @JsonIgnore ：不生产对应json的key，添加后，也不接受前端传递的json的key
+                    @JsonIgnore
+                        @Schema(description = "修改时间")
+                        private Date updateTime;
+        4.时间格式和时区有问题
+            jackson第三方包，帮我们把实体类的时间转成json的时间
+            总结：设置时间格式 设置时间的时区问题也是jackson的配置
+            方案1：局部配置 使用注解添加到时间的属性上
+                @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+            方案2：全局配置 application使用固定的key配置时间格式和时区
+                spring:
+                  jackson:
+                    date-format: yyyy-MM-dd HH:mm:ss
+                    time-zone: GMT+8
+        5.逻辑删除的数据也被查询了
+            方案1：局部
+                @TableLogic
+            方案2：全局
+                global-config:
+                  db-config:
+                    logic-delete-field: isDeleted

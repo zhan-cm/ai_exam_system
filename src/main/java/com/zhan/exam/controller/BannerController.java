@@ -1,11 +1,14 @@
 package com.zhan.exam.controller;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.zhan.exam.common.Result;
 import com.zhan.exam.entity.Banner;
+import com.zhan.exam.service.BannerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,11 +20,15 @@ import java.util.Map;
  * 轮播图控制器 - 处理轮播图管理相关的HTTP请求
  * 包括图片上传、轮播图的CRUD操作、状态切换等功能
  */
+@Slf4j
 @RestController  // REST控制器，返回JSON数据
 @RequestMapping("/api/banners")  // 轮播图API路径前缀
 @CrossOrigin  // 允许跨域访问
 @Tag(name = "轮播图管理", description = "轮播图相关操作，包括图片上传、轮播图增删改查、状态管理等功能")  // Swagger API分组
 public class BannerController {
+
+    @Autowired
+    private BannerService bannerService;
 
     
     /**
@@ -55,7 +62,17 @@ public class BannerController {
     @GetMapping("/list")  // 处理GET请求
     @Operation(summary = "获取所有轮播图", description = "获取所有轮播图列表，包括启用和禁用的，供管理后台使用")  // API描述
     public Result<List<Banner>> getAllBanners() {
-        return Result.success(null);
+        //1.查询所有的轮播图数据集合
+        //todo:解决返回轮播图的字段没有排序的问题
+        LambdaQueryWrapper<Banner> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.orderByAsc(Banner::getSortOrder);
+        List<Banner> bannerList = bannerService.list();
+        //2.将集合装入result类中
+        Result<List<Banner>> result = Result.success(bannerList);
+        //        -- 日志输出 info -> 输出本次查询结果[logback]
+        log.info("后台管理部分查询所有轮播图信息成功！查询轮播图数量为:{}，具体数据为{}",bannerList.size(),bannerList);
+        //3.返回结果
+        return result;
     }
     
     /**
