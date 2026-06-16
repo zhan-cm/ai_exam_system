@@ -1,12 +1,16 @@
 server:
   port: 8080
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
+    time-zone: Asia/Shanghai
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://localhost:3307/exam_system_new?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2b8
+    url: jdbc:mysql://localhost:3307/exam_system_new?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: root
     password: Root@123456
     hikari:
@@ -26,3 +30,9 @@ mybatis-plus:
 #  global-config:
 #    db-config:
 #      logic-delete-field: isDeleted
+
+minio:
+  access-key: minioadmin
+  endpoint: http://192.168.44.138:9000
+  bucket-name: onlinebucket
+  secret-key: minioadmin

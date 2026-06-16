@@ -1,0 +1,329 @@
+1.查询所有轮播图列表接口
+    接口分析：
+        参数：无
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": [       =>将查询到的轮播图放在data属性即可
+            		{
+            			"id": 1,
+            			"title": "智能考试系统介绍",
+            			"description": "基于AI技术的智能考试平台，支持在线考试、智能组卷等功能",
+            			"imageUrl": "https://example.com/images/banner1.jpg",
+            			"linkUrl": "https://example.com/about",
+            			"sortOrder": 1,
+            			"isActive": true,
+            			"createTime": ""
+            		}
+            	]
+            }
+    业务分析：
+        单表的全部查询
+        集成了mybatis-plus / 通用service(优先) / 通用的mapper
+        直接可以在controller完成查询梳理
+    实现过程：
+        1.查询所有的轮播图数据集合
+        2.将集合装入result类中
+        -- 日志输出 info -> 输出本次查询结果
+        3.返回结果
+    注意事项：
+        1.集成了日志@Sl4fj+log.info输出
+        2.没有根据sortOrder字段 正序排序
+        3.有些字段不要但是返回了，例如：updateTime , isDeleted
+            因为返回的json是由实体类转化的
+            默认：实体类有什么属性，就生成什么json的key
+            忽略：忽略某些属性，不生成key，需要额外配置
+            controller -> 方法handler -> java实体类 -> springmvc[ handlerAdapter -> jackson(json)] -> 前端 -> json
+            总结：实体类 - json第三方包 jackson包 - json
+            总结： 讲解jackson提供了哪些配置注解，可以忽略实体类属性不生成对应的jsonKey
+                @JsonIgnore ：不生产对应json的key，添加后，也不接受前端传递的json的key
+        4.时间格式和时区有问题
+            jackson第三方包，帮我们把实体类的时间转成json的时间
+            总结：设置时间格式 设置时间的时区问题也是jackson的配置
+            方案1：局部配置 使用注解添加到时间的属性上
+                @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+            方案2：全局配置 application使用固定的key配置时间格式和时区
+                spring:
+                  jackson:
+                    date-format: yyyy-MM-dd HH:mm:ss
+                    time-zone: GMT+8
+        5.逻辑删除的数据也被查询了
+            方案1：局部
+                @TableLogic
+            方案2：全局
+                global-config:
+                  db-config:
+                    logic-delete-field: isDeleted
+======================================================================================
+2.查询激活轮播图列表接口
+    接口分析：
+        参数：无
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": [
+            		{
+            			"id": 1,
+            			"title": "智能考试系统介绍",
+            			"description": "基于AI技术的智能考试平台，支持在线考试、智能组卷等功能",
+            			"imageUrl": "https://example.com/images/banner1.jpg",
+            			"linkUrl": "https://example.com/about",
+            			"sortOrder": 1,
+            			"isActive": true,
+            			"createTime": ""
+            		}
+            	]
+            }
+    业务分析：
+        查询前台需要的轮播图数据接口
+        查询所有激活状态（条件）
+        逻辑删除+忽略字段+时间格式+时区设置+日志输出
+    实现过程：
+        1.拼接查询条件（激活状态+保证正序排序）
+        2.查询符合条件的数据
+        3.装到返回结果的result
+        --log日志输出
+        4.返回result数据
+    注意事项：
+        逻辑删除+忽略字段+时间格式+时区设置+日志输出
+===================================================================================
+3.切换轮播图状态接口
+    接口分析：
+        参数：
+            path -> {id}
+            query -> isActive = 激活状态
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": ""
+            }
+    业务分析：
+        就是轮播图状态切换
+        启用状态轮播图前台部分会查询到
+    实现过程：
+        1.创建UpdateWrapper装修改的条件和修改后的值
+        2.调用业务层修改方法 update(wrapper)
+        --日志输出
+        3.返回result.success(null)
+    注意事项：
+        注意1：考虑修改时间的调整问题
+=========================================================================================
+4.删除轮播图信息接口
+    接口分析：
+        参数：
+            path -> {id}
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": ""
+            }
+    业务分析：
+        根据id删除对应的轮播图
+        也是单表动作，可以调用业务层 remove | mapper . delete
+        防御性变成问题：删除会影响数据的展示和数据的丢失
+            1.是不是做了逻辑删除
+            2.有没有重要的关联数据，导致无法被删除
+                eg:试卷表关联题目表（删除题目表，如果有试卷引用题目，就不能删除）
+            3.删除的同时顺便删除子数据
+                题目表->选项表
+                     ->答案表
+    实现过程：
+        1.根据id删除对应的轮播图
+        --日志输出
+        2.返回对应删除结果
+    注意事项：
+        逻辑删除->配置完毕
+        删除->防御性编程
+===========================================================================================
+5.获取轮播图详情接口
+    接口分析：
+        参数：
+            path -> {id}
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": {
+            		"id": 1,
+            		"title": "智能考试系统介绍",
+            		"description": "基于AI技术的智能考试平台，支持在线考试、智能组卷等功能",
+            		"imageUrl": "https://example.com/images/banner1.jpg",
+            		"linkUrl": "https://example.com/about",
+            		"sortOrder": 1,
+            		"isActive": true,
+            		"createTime": ""
+            	}
+            }
+    业务分析：
+        根据id查询
+        将结果装到result中
+    实现过程：
+        1.根据id查询轮播图对象
+        --日志输出
+        2.对象装入result返回
+    注意事项：
+==========================================================================================
+6.通用文件上传业务
+    业务分析：
+        单独进行文件上传的业务方法
+        方法（file,folder）
+        返回文件回显的地址
+    实现过程：
+        1.将minio整合到核心容器（复用minioClient对象）
+            回顾：springboot快速启动框架（简化配置（application），简化整合（场景启动器的机制 xx-starter），简化开发（自动配置原理 会把我们需要的核心组件自动加入核心容器【场景启动器】））
+            springboot整合第三方技术的方案：
+                方案1（场景启动器）：1.导入场景启动器 2.设置相关的配置参数application.yml 3.使用核心组件
+                方案2（非场景启动器）：1.导入普通的依赖 2.定义接受配置参数的properties
+                                    3.在application.yml定义相关的参数（key->properties）
+                                        4.定义配置类（核心组件加入到ioc容器） 5.使用核心组件
+            1.1导入minio依赖
+            1.2定义properties类，接收minio的参数 [endPoint,accessKey,secretKey,bucketName]
+                @Component
+                @ConfigurationProperties(prefix = "minio")
+                @Data
+                public class MinioProperties {
+
+                    private String endpoint;
+
+                    private String accessKey;
+
+                    private String secretKey;
+
+                    private String bucketName;
+
+                }
+            1.3去application.yml声明我们自己需要的参数（软编码【diamagnetic的参数写到配置文件中去】）
+            1.4定义minio的配置类（minioClient加入核心容器中即可）
+                @Slf4j
+                @Configuration
+
+                public class MinioConfiguration {
+
+                    @Autowired
+                    private MinioProperties properties;
+
+                    @Bean
+                    public MinioClient minioClient() {
+                        log.info("minio文件服务器连接成功");
+
+                        return MinioClient.builder().endpoint(properties.getEndpoint())
+                                .credentials(properties.getAccessKey(), properties.getSecretKey()).build();
+
+                    }
+                }
+            小细节： Properties读取参数类，加入核心容器的方案
+                方案1： 直接加入@Component //将我们加入到核心容器！我们才可以读取配置参数 【饿汉】
+                方案2： 后续加入 使用的位置的配置类 @EnableConfigurationProperties(XxxProperties.class) 【懒汉】
+        2.编写文件上传的业务方法
+            2.1 FileUploadService定义文件上传的方法(String folder,File file)
+            2.2 实现文件上传的步骤，最终返回文件回显的地址
+    注意事项：
+        注意1：文件覆盖和重复问题
+              只要minio的objectName相同
+              minio直接进行文件覆盖
+              设计不同的对象名称即可
+              uuid -> 生成一个随机不同的字符串 -> uuid_文件名
+              //1.位置防止重复，uuid进行对象名字的去重
+              //2.日期 banners/20260616/uuid_文件名
+                  String objectName = folder + "/" + new SimpleDateFormat("yyyyMMdd").format(new Date()) + "/" +
+                      UUID.randomUUID().toString().replaceAll("-","")+"_"+ file.getOriginalFilename();
+        注意2：主动抛出异常，没设计全局异常步骤问题
+            springmvc全局异常处理器 @ControllerAdvice @RestControllerAdvice
+            异常处理流程： 1.捕捉全局异常 2.收集异常信息（日志->程序员） 3.给客户友好反馈
+            @RestControllerAdvice
+            @Slf4j
+            public class GlobalExceptionHandler {
+                //定义异常处理的handler
+                @ExceptionHandler(Exception.class)
+                public Result exceptionHandler(Exception e){
+                    //打印日志
+                    e.printStackTrace();//错误的堆栈信息先打印
+                    log.error("代码出现异常，异常信息为：{}",e.getMessage());
+                    return  Result.error(e.getMessage());
+                }
+            }
+===================================================================================================
+7.上传轮播图信息接口
+    接口分析：
+        参数：
+            上传的文件对象（MultipartFile）
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": "imgUrl访问地址"
+            }
+    业务分析：
+        轮播图文件上传接口打印文件上传的业务
+        文件非空校验
+        文件的类型 image
+        调用文件上传业务
+        回显地址
+    实现过程：
+        文件非空校验
+        文件的类型 image
+        调用文件上传业务
+        回显地址
+    注意事项：
+        1.文件上传大小的限制问题
+            springboot默认限制最大1MB
+        如何自定义限制？
+            spring:
+              servlet:
+                multipart:
+                  max-file-size: 10MB
+                  max-request-size: 20MB
+==============================================================================================
+8.保存轮播图图接口
+    接口分析：
+        参数：
+            {
+              "id": 1,
+              "title": "智能考试系统介绍",
+              "description": "基于AI技术的智能考试平台，支持在线考试、智能组卷等功能",
+              "imageUrl": "https://example.com/images/banner1.jpg",
+              "linkUrl": "https://example.com/about",
+              "sortOrder": 1,
+              "isActive": true
+            }
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": ""
+            }
+    业务分析：
+        单表保存
+        调用mybatis-plus的方法
+        保存的时候注意下默认值： createTime isDeleted 0
+    实现过程：
+        直接保存即可
+    注意事项：
+=============================================================================================
+9.更新轮播图信息接口
+    接口分析：
+        参数：
+            {
+              "id": 1,
+              "title": "智能考试系统介绍",
+              "description": "基于AI技术的智能考试平台，支持在线考试、智能组卷等功能",
+              "imageUrl": "https://example.com/images/banner1.jpg",
+              "linkUrl": "https://example.com/about",
+              "sortOrder": 1,
+              "isActive": true
+            }
+        响应：
+            {
+            	"code": 200,
+            	"message": "操作成功",
+            	"data": ""
+            }
+    业务分析：
+        单表数据更新
+        注意修改数据库updateTime -> mysql自己维护
+    实现过程：
+    注意事项：

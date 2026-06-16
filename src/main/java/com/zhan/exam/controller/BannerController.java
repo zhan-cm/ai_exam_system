@@ -2,9 +2,11 @@ package com.zhan.exam.controller;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.zhan.exam.common.Result;
 import com.zhan.exam.entity.Banner;
 import com.zhan.exam.service.BannerService;
+import io.minio.errors.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 
@@ -39,10 +44,11 @@ public class BannerController {
     @PostMapping("/upload-image")  // 处理POST请求
     @Operation(summary = "上传轮播图图片", description = "将图片文件上传到MinIO服务器，返回可访问的图片URL")  // API描述
     public Result<String> uploadBannerImage(
-            @Parameter(description = "要上传的图片文件，支持jpg、png、gif等格式，大小限制5MB") 
-            @RequestParam("file") MultipartFile file) {
-
-        return Result.success("上传图片地址", "图片上传成功");
+            @Parameter(description = "要上传的图片文件，支持jpg、png、gif等格式，大小限制5MB")
+            @RequestParam("file") MultipartFile file) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        String imageUrl = bannerService.uploadBannerImage(file);
+        log.info("轮播图上传接口调用成功！图片回显地址为：{}", imageUrl);
+        return Result.success(imageUrl, "图片上传成功");
     }
     
     /**
@@ -52,7 +58,18 @@ public class BannerController {
     @GetMapping("/active")  // 处理GET请求
     @Operation(summary = "获取启用的轮播图", description = "获取状态为启用的轮播图列表，供前台首页展示使用")  // API描述
     public Result<List<Banner>> getActiveBanners() {
-        return Result.success(null);
+        //1.拼接查询条件（激活状态+保证正序排序）
+        LambdaQueryWrapper<Banner> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Banner::getIsActive, true);
+        queryWrapper.orderByAsc(Banner::getSortOrder);
+        //2.查询符合条件的数据
+        List<Banner> bannerList = bannerService.list(queryWrapper);
+        //3.装到返回结果的result
+        Result<List<Banner>> result = Result.success(bannerList);
+        //        --log日志输出
+        log.info("查询前台激活轮播图接口调用成功！查询数量为：{}，具体数据为：{}",bannerList.size(),bannerList);
+        //4.返回result数据
+        return result;
     }
     
     /**
@@ -66,7 +83,7 @@ public class BannerController {
         //todo:解决返回轮播图的字段没有排序的问题
         LambdaQueryWrapper<Banner> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByAsc(Banner::getSortOrder);
-        List<Banner> bannerList = bannerService.list();
+        List<Banner> bannerList = bannerService.list(queryWrapper);
         //2.将集合装入result类中
         Result<List<Banner>> result = Result.success(bannerList);
         //        -- 日志输出 info -> 输出本次查询结果[logback]
@@ -83,8 +100,12 @@ public class BannerController {
     @GetMapping("/{id}")  // 处理GET请求
     @Operation(summary = "根据ID获取轮播图", description = "根据轮播图ID获取单个轮播图的详细信息")  // API描述  
     public Result<Banner> getBannerById(@Parameter(description = "轮播图ID") @PathVariable Long id) {
-
-      return Result.error("轮播图不存在");
+        //1.根据id查询轮播图对象
+        Banner byId = bannerService.getById(id);
+        //        --日志输出
+        log.info("查询id={}的轮播图结果调用成功，查询结果为{}",id,byId);
+        //2.对象装入result返回
+        return Result.success(byId);
     }
     
     /**
@@ -95,7 +116,9 @@ public class BannerController {
     @PostMapping("/add")  // 处理POST请求
     @Operation(summary = "添加轮播图", description = "创建新的轮播图，需要提供图片URL、标题、跳转链接等信息")  // API描述
     public Result<String> addBanner(@RequestBody Banner banner) {
-        return null;
+        bannerService.save(banner);
+        log.info("保存轮播图数据成功，保存的id为：{}",banner.getId());
+        return Result.success(null);
     }
     
     /**
@@ -106,7 +129,9 @@ public class BannerController {
     @PutMapping("/update")  // 处理PUT请求
     @Operation(summary = "更新轮播图", description = "更新轮播图的信息，包括图片、标题、跳转链接、排序等")  // API描述
     public Result<String> updateBanner(@RequestBody Banner banner) {
-        return null;
+        bannerService.updateById(banner);
+        log.info("更新{}轮播图数据成功",banner.getId());
+        return Result.success(null);
     }
     
     /**
@@ -117,7 +142,12 @@ public class BannerController {
     @DeleteMapping("/delete/{id}")  // 处理DELETE请求
     @Operation(summary = "删除轮播图", description = "根据ID删除指定的轮播图")  // API描述
     public Result<String> deleteBanner(@Parameter(description = "轮播图ID") @PathVariable Long id) {
-        return null;
+        //1.根据id删除对应的轮播图
+        bannerService.removeById(id);
+        //        --日志输出
+        log.info("删除id={}的轮播图成功！",id);
+        //2.返回对应删除结果
+        return Result.success("删除成功");
     }
     
     /**
@@ -131,6 +161,15 @@ public class BannerController {
     public Result<String> toggleBannerStatus(
             @Parameter(description = "轮播图ID") @PathVariable Long id, 
             @Parameter(description = "是否启用，true为启用，false为禁用") @RequestParam Boolean isActive) {
-        return null;
+        //1.创建UpdateWrapper装修改的条件和修改后的值
+        LambdaUpdateWrapper<Banner> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Banner::getId,id);
+        updateWrapper.set(Banner::getIsActive, isActive);
+        //2.调用业务层修改方法 update(wrapper)
+        bannerService.update(updateWrapper);
+        //        --日志输出
+        log.info("id={}轮播图的状态修改成功！修改后的状态为：{}",id,isActive);
+        //3.返回result.success(null)
+        return Result.success(null);
     }
 } 
