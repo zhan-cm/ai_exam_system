@@ -1,0 +1,172 @@
+一、Mapper层：BaseMapper<T>（所有Mapper继承，直接操作数据库）
+
+1. 新增操作
+// 插入一条记录，实体所有字段都会插入（null字段也会存null）
+int insert(T entity);
+
+2. 删除操作
+// 根据主键删除
+int deleteById(Serializable id);
+// 根据实体条件删除（非null字段做等值匹配）
+int delete(T entity);
+// 根据Wrapper条件删除
+int deleteByWrapper(Wrapper<T> queryWrapper);
+// 批量根据主键删除
+int deleteBatchIds(Collection<? extends Serializable> idList);
+
+
+3. 更新操作
+// 根据主键更新，只更新实体非null字段
+int updateById(T entity);
+// 根据Wrapper条件更新，实体非null字段赋值
+int update(T entity, Wrapper<T> updateWrapper);
+
+
+4. 查询操作
+// 根据主键查询
+T selectById(Serializable id);
+// 批量主键查询
+List<T> selectBatchIds(Collection<? extends Serializable> idList);
+// 根据实体等值条件查询多条
+List<T> selectList(T entity);
+// 根据Wrapper条件查询多条（最常用）
+List<T> selectList(Wrapper<T> queryWrapper);
+// 查询所有数据
+List<T> selectList(null);
+
+// 根据Wrapper查一条（多条会抛异常）
+T selectOne(Wrapper<T> queryWrapper);
+// 根据Wrapper统计总数
+Long selectCount(Wrapper<T> queryWrapper);
+
+// 分页查询（必须配置分页插件）
+Page<T> selectPage(Page<T> page, Wrapper<T> queryWrapper);
+// 不分页，返回Map集合列表
+List<Map<String, Object>> selectMaps(Wrapper<T> queryWrapper);
+// 分页返回Map
+Page<Map<String, Object>> selectMapsPage(Page<T> page, Wrapper<T> queryWrapper);
+
+
+--------------------------------------------------------------------------------------------------
+
+二、Service层：IService<T>（业务层封装，底层调用BaseMapper）
+
+（一）新增相关
+// 单条新增
+boolean save(T entity);
+// 批量新增（循环insert，大数据量不推荐）
+boolean saveBatch(Collection<T> entityList);
+// 批量，自定义单次批次数量
+boolean saveBatch(Collection<T> entityList, int batchSize);
+
+// 新增或更新：有主键则更新，无主键则新增
+boolean saveOrUpdate(T entity);
+// 根据Wrapper条件判断，存在更新，不存在新增
+boolean saveOrUpdate(T entity, Wrapper<T> updateWrapper);
+// 批量新增或更新
+boolean saveOrUpdateBatch(Collection<T> entityList);
+boolean saveOrUpdateBatch(Collection<T> entityList, int batchSize);
+
+
+（二）删除相关
+// 根据主键删除
+boolean removeById(Serializable id);
+// 根据实体等值条件删除
+boolean remove(T entity);
+// 根据Wrapper条件删除
+boolean remove(Wrapper<T> queryWrapper);
+// 批量主键删除
+boolean removeByIds(Collection<? extends Serializable> idList);
+
+
+（三）更新相关
+// 根据主键更新（只更新非null字段）
+boolean updateById(T entity);
+// 根据Wrapper条件更新
+boolean update(T entity, Wrapper<T> updateWrapper);
+// 批量更新（循环执行）
+boolean updateBatchById(Collection<T> entityList);
+boolean updateBatchById(Collection<T> entityList, int batchSize);
+
+
+（四）查询相关（你平时用得最多）
+// 根据主键查
+T getById(Serializable id);
+// 根据Wrapper查一条，无数据返回null，多条抛异常
+T getOne(Wrapper<T> queryWrapper);
+// getOne重载，第二个参数false：多条不抛异常，返回第一条
+T getOne(Wrapper<T> queryWrapper, boolean throwEx);
+
+// 批量主键查询
+List<T> listByIds(Collection<? extends Serializable> idList);
+// 根据实体等值查询全部
+List<T> list(T entity);
+// 根据Wrapper查询全部（你代码里的 list(wrapper)）
+List<T> list(Wrapper<T> queryWrapper);
+// 查询表所有数据
+List<T> list();
+
+// 统计总数
+long count();
+long count(Wrapper<T> queryWrapper);
+
+// 分页查询（需分页插件）
+Page<T> page(Page<T> page, Wrapper<T> queryWrapper);
+// 不分页
+Page<T> page(Page<T> page, Wrapper<T> queryWrapper);
+
+// 查询Map列表（只查部分字段场景）
+List<Map<String, Object>> listMaps(Wrapper<T> queryWrapper);
+
+
+（五）链式查询/更新（Lambda链式，简化代码）
+// 链式查询，无需new Wrapper
+LambdaQueryChainWrapper<T> lambdaQuery();
+QueryChainWrapper<T> query();
+
+// 链式更新
+LambdaUpdateChainWrapper<T> lambdaUpdate();
+UpdateChainWrapper<T> update();
+
+// 使用示例：
+List<Category> list = categoryService.lambdaQuery()
+        .eq(Category::getSort, 1)
+        .list();
+
+
+（六）工具获取Mapper
+// 在ServiceImpl实现类内部可直接拿到baseMapper操作
+this.baseMapper.selectList(wrapper);
+// IService对外提供获取Mapper方法
+BaseMapper<T> getBaseMapper();
+
+
+-------------------------------------------------------------------------------------------------
+
+三、Mapper 和 Service 核心区别（重点区分）
+| 维度 | BaseMapper（Mapper） | IService（Service） |
+|------|----------------------|--------------------|
+| 调用位置 | Mapper接口，Controller禁止直接注入使用 | Service层，Controller标准调用入口 |
+| 批量操作 | 无批量方法，只能单条循环 | 内置 saveBatch / updateBatch 批量API |
+| 返回值 | int（影响行数）、实体、List、Page | boolean（是否成功）、实体、List、Page |
+| 适用场景 | ServiceImpl底层封装使用 | 业务层、Controller直接调用 |
+| 特色能力 | 原生SQL操作、分页、Map查询 | 批量、saveOrUpdate、链式lambda查询 |
+
+四、开发规范建议
+1. **Controller 只调用 Service**，绝不直接注入 Mapper；
+2. 简单单表CRUD直接用 `service.list() / service.getById()`；
+3. 多条件查询：`service.lambdaQuery().eq().orderByAsc().list()`；
+4. 批量插入/更新优先用 `saveBatch`，不要循环调用 save；
+5. 复杂多表联表、自定义SQL，在Mapper写XML自定义方法。
+
+五、对应你之前两段代码对照
+1. Banner 正常写法：
+
+// Service层list(Wrapper)，底层 = baseMapper.selectList(wrapper)
+bannerService.list(queryWrapper);
+
+2. Mapper直接写法（不推荐放Controller）：
+
+categoryMapper.selectList(new LambdaQueryWrapper<Category>().orderByAsc(Category::getSort));
+
+两者执行SQL完全一致，只是分层封装不同。
