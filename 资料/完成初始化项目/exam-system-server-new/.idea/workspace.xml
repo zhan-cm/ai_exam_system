@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f0954fe7-48fc-4ca4-8cd4-9cccad0193bc" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/AdminWebApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/common/CacheConstants.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/common/Result.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/config/Knife4jConfiguration.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/config/MybatisPlusConfiguration.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/BannerController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/CategoryController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/ExamController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/ExamRecordController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/FileController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/NoticeController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/PaperController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/QuestionBatchController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/QuestionController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/StatsController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/UserController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/VideoAdminController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/VideoCategoryController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/controller/VideoController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/AnswerRecord.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/Banner.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/BaseEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/Category.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/Exam.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/ExamRecord.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/Notice.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/Paper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/PaperQuestion.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/Question.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/QuestionAnswer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/QuestionChoice.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/QuestionType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/Video.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/VideoCategory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/VideoLike.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/entity/VideoView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/AnswerRecordMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/BannerMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/CategoryMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/ExamMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/ExamRecordMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/NoticeMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/PaperMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/PaperQuestionMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/QuestionAnswerMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/QuestionChoiceMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/QuestionMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/UserMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/VideoCategoryMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/VideoLikeMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/VideoMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/mapper/VideoViewMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/AIService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/BannerService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/CategoryService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/ExamRecordService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/ExamService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/FileUploadService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/KimiAiService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/KimiGradingService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/NoticeService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/PaperService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/QuestionCategoryService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/QuestionService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/StatsService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/UserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/VideoCategoryService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/VideoService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/AIServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/BannerServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/CategoryServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/ExamRecordServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/ExamServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/FileUploadServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/KimiAiServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/KimiGradingServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/NoticeServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/PaperServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/QuestionCategoryServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/QuestionServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/StatsServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/UserServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/VideoCategoryServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/service/impl/VideoServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/utils/ExcelUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/utils/IpUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/AiGenerateRequestVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/AiPaperVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/ChatChoice.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/ChatMessage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/ChatRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/ChatResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/ExamRankingVO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/LoginRequestVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/LoginResponseVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/PageResult.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/PaperVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/QuestionImportVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/ResponseMessage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/RuleVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/StartExamVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/StatsVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/SubmitAnswerVo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/atguigu/exam/vo/Usage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/AnswerRecordMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/BannerMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/CategoryMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/ExamMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/ExamRecordMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/NoticeMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/PaperMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/PaperQuestionMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/QuestionAnswerMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/QuestionChoicceMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/QuestionMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mapper/UserMapper.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../01_智能学习平台项目详解.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/common/Result.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/common/Result.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/config/Knife4jConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/config/Knife4jConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/config/MinioConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/config/MinioConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/controller/BannerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/controller/BannerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/controller/ExamRecordController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/controller/ExamRecordController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/controller/QuestionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/controller/QuestionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/entity/Notice.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/entity/Notice.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/mapper/ExamRecordMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/mapper/ExamRecordMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/ExamRecordService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/ExamRecordService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/FileUploadService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/FileUploadService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/QuestionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/QuestionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/ExamRecordServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/ExamRecordServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/ExamServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/ExamServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/PaperServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/PaperServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/QuestionServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/java/com/exam/service/impl/QuestionServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../exam-system-server/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/public/favicon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/App.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/api/exam.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/api/paper.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/assets/logo.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/components/CategoryTree.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/components/QuestionList.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/main.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/router/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/utils/request.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/BannerManage.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/CategoryManage.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/Exam.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/ExamRanking.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/ExamResult.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/ExamStart.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/Home.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/NoticeManage.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/PaperCreate.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/PaperListForExam.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/PaperManage.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/Practice.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/QuestionManage.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/src/views/ScoreManage.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam-system-web/vite.config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../exam_system.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../exam_system.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../教案/01_智能学习平台项目详解.md" beforeDir="false" afterPath="$PROJECT_DIR$/../教案/01_智能学习平台项目详解.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../教案/02_智能学习平台-数据库设计篇.md" beforeDir="false" afterPath="$PROJECT_DIR$/../教案/02_智能学习平台-数据库设计篇.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../教案/03_接口说明文档.md" beforeDir="false" afterPath="$PROJECT_DIR$/../教案/03_接口说明文档.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../教案/04-公寓租赁项目-开发准备篇.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../教案/05-公寓租赁项目-项目搭建篇.md" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CompilerWorkspaceConfiguration">
+    <option name="MAKE_PROJECT_ON_SAVE" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="mapper" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="customMavenHome" value="D:\java0421\apache-maven-3.8.8" />
+        <option name="mavenHomeTypeForPersistence" value="CUSTOM" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="30G1jO4btXqbcARj6nWjgFyjx5w" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;Spring Boot.AdminWebApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/admin/Desktop/exam-system/exam-system-server-new/src/main/java/com/atguigu/exam&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/admin/Desktop/exam-system/exam-system-server-new/src/main/java/com/atguigu/Main.java&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\admin\Desktop\exam-system\exam-system-server-new\src\main\java\com\atguigu\exam" />
+      <recent name="C:\Users\admin\Desktop\exam-system\exam-system-server-new\src\main\resources\mapper" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.atguigu.exam.entity" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="AdminWebApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+      <module name="exam-system-server-new" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.atguigu.exam.AdminWebApplication" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.atguigu.exam.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Spring Boot.AdminWebApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9f38398b9061-18abd8497189-intellij.indexing.shared.core-IU-241.14494.240" />
+        <option value="bundled-js-predefined-1d06a55b98c1-74d2a5396914-JavaScript-IU-241.14494.240" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f0954fe7-48fc-4ca4-8cd4-9cccad0193bc" name="Changes" comment="" />
+      <created>1753239229597</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1753239229597</updated>
+      <workItem from="1753239230618" duration="11150000" />
+      <workItem from="1753256277536" duration="2690000" />
+      <workItem from="1753258977135" duration="343000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
