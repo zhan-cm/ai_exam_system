@@ -1,7 +1,9 @@
 package com.zhan.exam.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zhan.exam.entity.Question;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.zhan.exam.vo.QuestionQueryVo;
 
 import java.util.List;
 
@@ -30,5 +32,57 @@ import java.util.List;
  */
 public interface QuestionService extends IService<Question> {
 
+    /**
+     * 分页查询题目信息：方案2 进行分布查询
+     * @param questionPage
+     * @param questionQueryVo
+     */
+    void queryQuestionListByPage(Page<Question> questionPage, QuestionQueryVo questionQueryVo);
 
-} 
+    /**
+     * 查询题目的详情
+     * @param id
+     * @return
+     */
+    Question queryQuestionById(Long id);
+
+    /**
+     * 保存题目信息
+     * @param question
+     */
+    void saveQuestion(Question question);
+
+    /**
+     * 更新题目及其完整信息（包含选项和答案）
+     *
+     * 业务复杂性：
+     * - 需要处理选项的增删改：删除旧选项，添加新选项
+     * - 答案更新：覆盖原有答案或新增答案
+     * - 数据完整性：确保更新过程中数据一致
+     *
+     * 实现策略：
+     * 1. 更新题目主表信息
+     * 2. 删除原有选项，重新插入新选项（简化逻辑）
+     * 3. 更新或插入答案信息
+     *
+     * @param question 包含更新信息的题目对象
+     */
+    void customUpdateQuestion(Question question);
+
+    /**
+     * 删除题目
+     * 实现策略：
+     *  1. 判断试卷是有有引用题目，有，删除失败！提示！
+     *  2. 先删除子数据（选项和答案）
+     *  3. 删除主数据题目表
+     * @param id
+     */
+    void customRemoveQuestionById(Long id);
+
+    /**
+     * 查询指定数量的热门题目
+     * @param size 默认：6
+     * @return
+     */
+    List<Question> customFindPopularQuestions(Integer size);
+}

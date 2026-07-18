@@ -1,0 +1,262 @@
+1.查询所有题目信息分页接口
+    接口分析：
+        参数：
+            6个参数 2个分页参数【必传递】 4个查询条件（类别id，题目类别，难度，title的模糊关键词）【非必须】
+        响应：
+            {
+                code:200
+                message:""
+                data:
+                    mybatis-plus的分页对象Page
+                    查询数据： 题目对象-》 题目对应的答案 —》 题目对应的选项
+            }
+    业务分析：
+        一次多表数据查询
+        分页+多表+动态条件
+        表涉及： 题目 -> 对一  答案
+                    -> 对多  选项
+
+        方案1：嵌套结果 【1次查询 Java代码也不需要做任何事情】
+                连表查询 1 join 2 join 3
+
+        方案2：嵌套查询（分步查询）【1+n查询，1次主数据表查询，n次触发的子查询】
+                3步： 题目查询 + 分页插件1 -》 题目的答案 n -》 题目的选项 n 分段步骤越多性能越差 1+2n
+                2步： 题目+答案关联查询 + 分页插件 1 -》 题目对应的选项 n   1+n
+
+        方案3：Java代码处理 【3次查询（常量），Java代码进行逻辑处理】
+                1 -》 题目 2 -》 答案 3 -》 选项
+                Java逻辑处理（stream）进行结果拼接
+
+        问题： 多表（题目 -》 答案 -》 选项（对应多个选项））+分页（分页插件）
+                多表连接查询，对多关系，使用分页插件，就会出现数据错误问题
+                使用分页插件进行切割后可能，缺少数据
+                1. 连查后，10 道题会变成 30 条记录（每道题重复 3 次，对应 3 个选项）；
+                2. 分页插件按 “30 条记录” 分页，取前 10 条 → 这 10 条记录实际只对应 3-4 道题（每道题占 3 条记录）；
+                3. 结果：本想查 10 道题，实际只返回了 3-4 道，分页完全错误
+        解决: 对多的多表查询+分页插件 智能使用分布查询 或者 java代码处理
+    实现过程：
+        1.mybatis-plus分页插件加入到ioc容器
+        @Bean
+        public MybatisPlusInterceptor mybatisPlusInterceptor() {
+            MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+            //mybatis-plus
+            interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+            return interceptor;
+        }
+        2.处理下controller层的参数
+            原因1： 六个参数，有四个需要传递到mapper层。直接传递不方便！四个参数放在实体类 总结：key=value 可以混合接收 一部分直接接收 一部分使用实体类
+            原因2： page size 需要在controller层直接使用 -》 Page [mybatis-plus] 因为本次查询的结果是page对象，方便方到result中，业务方法也不需要有返回值
+                （page 使用mybatis-plus分页（Page） -》 参数和返回值的page最终是同一个对象)
+                分页方法（page->service->mapper） page有了查询的结果 records total
+        方案2：嵌套查询
+            1.定义controller层
+                1.1 封装page对象
+                1.2调用业务方法
+                1.3将page放到result返回
+            2.编写service方法
+                调用questionMapper方法
+            3.编写mapper方法
+                questionChoiceMapper -> 方法 -> 查询题目对应的选项集合
+                questionMapper -> 方法 -> 分页 -> 题目+题目答案
+            4.动态查询 自己questionMapper对应sql添加条件
+                <if ...
+        方案3： java代码处理实现
+            1.题目单表的分页+动态条件查询（mybatis-plus）
+            2.查询题目对应的所有的选项和所有的答案（mybatis-plus）
+            3.题目的选项和档案集合转成map格式  map (key=> 题目id , 题目对应的选项集合 | 题目对应的答案对象)
+            4.循环题目列表，进行题目的选项和方案赋值工作
+    注意事项：
+        1.省略result标签自动映射，且有嵌套对象需要开启自动映射为full
+            auto-mapping-behavior:full
+        2.自定义方法使用分页插件 sql语句不能使用 ； 结尾
+        3.自定义mapperxml查询方法，嵌套对象赋值，需要使用resultMap
+        4.自定义方法，必须自己添加逻辑删除判断is_deleted = 0
+        5.查询题目的时候，要根据创建实践进行倒叙查询（保证最新的题目在上）
+        6.查询选型的时候，需要根据选项sort字段排序查询（abcd 根据返回顺序判定）
+=============================================================================
+2.根据id查询题目详情接口
+    接口分析：
+        参数：path -> id
+        响应：
+            {
+                data:{
+                    题目对象，
+                    选择题：选项集合
+                    答案对象
+                }
+            }
+    业务分析：
+        根据id查询题目详情
+        再给题目进行赋值（选项和方案）
+        可以复用查询集合java代码
+        还需要将查询的题目缓存到redis的zset做热题榜
+    实现过程：
+        1.根据id查询题目
+        2.根据id查询题目对应的答案
+        3.根据id查询题目对应的选项（排序）
+        4.整合redis
+        5.查询结束后，进行zset数据缓存即可
+            5.1 先检查redis是否启动
+            5.2 项目集成redis环境（场景启动器 1.导入启动器 2.设置必要参数 3.直接使用即可）
+                redis进行序列化器的配置（默认：jdk序列化器 数据 -> 序列化器[key - 字符串 | value - json ] -> redis）
+            5.3 导入redis工具类
+            5.4 封装一个进行热门排行榜添加的方法
+            5.5 题目详情开启线程，调用热门排行榜方法
+    注意事项：
+        1.选项记得排序
+=============================================================================
+3.题目信息添加功能接口
+    接口分析：
+        参数：
+            {
+                题目表的信息
+                简单题和判断题： 只有 答案对象
+                选择题：  只有选项集合
+            }
+        响应：
+            题目对象
+    业务分析：
+        保存题目，是多表操作
+        保存题目表，简单和判断题还需要保存题目对应的答案 如果是选择题，需要保存选项和答案
+        同一个type类型下（选择题 简单 判断题）title不能重复
+    实现过程：
+        1.先判断不能重复 同一type类型下（选择题 简单 判断题）title不能重复
+        2.保存题目信息（先保存题目，保存题目才有题目id，才能进行后续的答案和选项保存）
+        3.判断是不是选择题，是根据选项的正确给答案赋值 同时将选项插入到选项表
+        4.完成答案数据的插入
+    注意事项：
+        1.因为当前业务涉及了 题目 选项和答案的插入动作，应该添加事物，保证业务的一致性
+        2.利用'A'+index的形式获取了选项的正确答案
+=============================================================================
+4.更新题目信息接口接口
+    接口分析：
+        参数：
+            path -> id
+            {question | choice | answer}
+        响应：
+            {
+              "id": 1,
+              "title": "以下关于Java面向对象编程的说法正确的是？",
+              "type": "CHOICE",
+              "multi": false,
+              "categoryId": 1,
+              "difficulty": "MEDIUM",
+              "score": 5,
+              "paperScore": 10,
+              "analysis": "Java是面向对象编程语言，支持封装、继承、多态三大特性...",
+              "choices": [
+                {
+                  "id": 0,
+                  "createTime": "",
+                  "isDeleted": "",
+                  "questionId": 1,
+                  "content": "Java是面向对象编程语言",
+                  "isCorrect": true,
+                  "sort": 1
+                }
+              ],
+              "answer": {
+                "id": 0,
+                "createTime": "",
+                "isDeleted": "",
+                "questionId": 1,
+                "answer": "正确",
+                "keywords": "面向对象,封装,继承,多态"
+              }
+            }
+    业务分析：
+        校验，不同id的title不能相同
+        题目和答案可以直接更新
+        选项需要删除+插入
+        多条更新 ，删除 + 插入 = 更新
+        选择题，答案内容选项决定
+    实现过程：
+        1.进行判断
+        2.进行题目信息的更新
+        3.获取答案对象
+        4.判断是选择题[1.删除原有选项 2. 添加新的选项 3.拼接正确的答案 4.给答案对象答案赋值]
+        5.进行答案对象的更新
+    注意事项：
+=============================================================================
+5.删除题目接口
+    接口分析：
+        参数：path -> id
+        响应：
+            {
+                "code": 200,
+                "message": "题目删除成功",
+                "data": null
+            }
+    业务分析：
+        删除题目是多表操作，需要同时删除题目表、选项表、答案表的相关数据
+        删除前需要校验：题目是否被试卷引用，被引用了不能删
+        使用逻辑删除（is_deleted=1），不是物理删除
+    实现过程：
+        1.校验题目是否被试卷引用
+            查 paper_question 表，count(question_id=要删的题目ID)
+            count > 0 → 抛异常"该题目被 N 张试卷引用，无法删除"
+            count = 0 → 继续
+        2.逻辑删除题目主表
+            questionService.removeById(id)
+            → MyBatis Plus 逻辑删除，实际执行 UPDATE questions SET is_deleted=1 WHERE id=?
+        3.逻辑删除答案
+            questionAnswerMapper.delete(new LambdaQueryWrapper<QuestionAnswer>()
+                .eq(QuestionAnswer::getQuestionId, id))
+            → UPDATE question_answers SET is_deleted=1 WHERE question_id=?
+        4.逻辑删除选项
+            questionChoiceMapper.delete(new LambdaQueryWrapper<QuestionChoice>()
+                .eq(QuestionChoice::getQuestionId, id))
+            → UPDATE question_choices SET is_deleted=1 WHERE question_id=?
+    注意事项：
+        1.删除前必须校验是否被试卷引用，否则试卷里的题目会变成"孤儿数据"
+        2.三张表的删除要按顺序：先删子表（选项、答案），再删主表（题目）
+        3.当前项目中 removeById 和 delete(new LambdaQueryWrapper) 都是逻辑删除
+          因为实体类配置了 @TableLogic，MyBatis Plus 自动把 DELETE 语句转成 UPDATE is_deleted=1
+        4.整个方法需要 @Transactional 保证一致性
+=============================================================================
+6.获取热门题目接口
+    接口分析：
+        参数：query -> size（返回数量，默认10）
+        响应：
+            {
+                "code": 200,
+                "message": "操作成功",
+                "data": [
+                    {
+                        题目对象（含 choices 选项列表 + answer 答案对象）
+                    },
+                    ...共 size 条
+                ]
+            }
+    业务分析：
+        热门度 = 题目被查看的次数，用 Redis 的 ZSet（有序集合）存储
+        每次查题目详情时，异步给该题目的热度分数 +1
+        查热门时，从 Redis 取排名前 N 的题目ID，再去数据库查完整数据
+        如果 Redis 里数据不够 N 条，用最新题目补足（优雅降级）
+        最后给所有题目填充选项和答案（复用之前写的 fillQuestionChoiceAndAnswer 方法）
+    实现过程：
+        1.定义热门题目集合（最终返回用）
+            List<Question> popularQuestions = new ArrayList<>();
+        2.从 Redis ZSet 取热门题目ID（按分数从高到低取前 size 条）
+            redisUtils.zReverseRangeWithScores("question:popular", 0, size-1)
+            → 拿到 [(id=63, score=15), (id=12, score=8), ...]
+            → 按分数排序，提取ID列表 idsList
+            → 用 idsList 去数据库查题目，加入 popularQuestions
+            注意：Redis 里有的ID可能在数据库已被删除，要跳过
+        3.判断数量是否够 size
+            diff = size - popularQuestions.size()
+            如果 diff > 0（不够）：
+            → 查最新题目补足：SELECT * FROM questions WHERE id NOT IN (热门ID列表)
+              ORDER BY create_time DESC LIMIT diff
+            → 加入 popularQuestions
+        4.给所有题目填充选项和答案
+            复用已有的 fillQuestionChoiceAndAnswer(popularQuestions) 方法
+            （批量查选项和答案 → 转Map → 循环赋值）
+        5.返回 popularQuestions
+    注意事项：
+        1.热度的累加在"查题目详情"接口里，用新线程异步执行，不能阻塞主流程
+            new Thread(() -> redisUtils.zIncrementScore(...)).start();
+        2.热门题目不够时，用"最新题目"补足，这是优雅降级，保证前端永远能拿到数据
+        3.ZSet 的 member 存的是题目ID（Long类型），score 存的是访问次数
+        4.如果缓存里完全没数据（系统刚启动），全部用最新题目代替
+=============================================================================

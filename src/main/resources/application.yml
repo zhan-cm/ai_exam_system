@@ -1,6 +1,10 @@
 server:
   port: 8080
 spring:
+  data:
+    redis:
+      host: 192.168.44.134
+      port: 6379
   servlet:
     multipart:
       max-file-size: 10MB
@@ -27,6 +31,7 @@ mybatis-plus:
   mapper-locations: classpath*:com/zhan/exam/mapper/*.xml
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    auto-mapping-behavior: full
 #  global-config:
 #    db-config:
 #      logic-delete-field: isDeleted
@@ -36,3 +41,7 @@ minio:
   endpoint: http://192.168.44.138:9000
   bucket-name: onlinebucket
   secret-key: minioadmin
+
+logging:
+  level:
+    root: debug
