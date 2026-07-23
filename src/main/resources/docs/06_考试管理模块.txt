@@ -1,0 +1,120 @@
+1.开始考试接口
+    接口分析：
+        参数：JSON -> { paperId: 试卷ID, studentName: 考生姓名 }
+        响应：
+            {
+                data: {
+                    id: 考试记录ID,
+                    examId, studentName, score: 0,
+                    startTime, status: "进行中", windowSwitches: 0
+                }
+            }
+    业务分析：
+        学生点击"开始考试"，系统创建一条考试记录
+        如果该学生在这张试卷上已有"进行中"的记录，直接返回旧的（幂等性）
+        状态初始值：进行中，分数：0，切屏次数：0
+    实现过程：
+        1.查是否存在进行中的考试记录（幂等性校验）
+            WHERE student_name = 学生名 AND exam_id = 试卷ID AND status = '进行中'
+            存在 → 直接返回旧记录，不创建新的
+        2.不存在 → 创建新 ExamRecord
+            设置：studentName, examId, status="进行中", windowSwitches=0, startTime=now
+        3.save(examRecord) 入库
+        4.返回 examRecord
+    注意事项：
+        1.幂等性设计：防止学生重复点"开始考试"创建多条记录
+        2.不需要返回试卷内容，前端拿到考试记录ID后自己调试卷详情
+=============================================================================
+2.查询考试记录详情接口
+    接口分析：
+        参数：path -> id（考试记录ID）
+        响应：
+            {
+                data: {
+                    考试记录基本信息,
+                    paper: { 试卷对象（含题目列表） },
+                    answerRecords: [ 答题记录列表 ]
+                }
+            }
+    业务分析：
+        查看某次考试的完整信息：是谁 + 哪张卷 + 每道题的答案 + 得分 + AI评语
+        需要聚合 exam_records + paper + answer_record 三部分数据
+        答题记录要和试卷题目顺序一致
+    实现过程：
+        1.查考试记录：getById(id)，null 则抛异常
+        2.查试卷详情：paperService.customPaperDetailById(examId)
+            null → 抛异常（试卷被删了）
+        3.查答题记录：answerRecordService.list(WHERE exam_record_id = id)
+        4.答题记录排序（和试卷题目顺序对齐）
+            提取试卷题目ID列表 questionIdList
+            answerRecords.sort 按题目ID在试卷中的位置排
+        5.数据组装：
+            examRecord.setPaper(paper)
+            examRecord.setAnswerRecords(answerRecords)
+        6.返回 examRecord
+    注意事项：
+        1.答题记录排序很重要：前端展示的答题卡顺序要和考试时一致
+        2.试卷可能被后续删除了，要做 null 判断
+=============================================================================
+3.提交考试答案接口
+    接口分析：
+        参数：path -> examRecordId + JSON数组 ->
+            [{ questionId, userAnswer }, ...]
+        响应：操作结果消息
+    业务分析：
+        学生交卷，一次性提交所有答案
+        系统记录答案 → 更新考试状态 → 自动触发AI判卷
+    实现过程：
+        1.保存答题记录（中间表）
+            answers 列表 stream → map → AnswerRecord(examRecordId, questionId, userAnswer)
+            answerRecordService.saveBatch(answerRecordList)
+        2.更新考试记录状态
+            setEndTime(now), setStatus("已完成")
+            updateById(examRecord)
+        3.自动触发判卷
+            调用 gradeExam(examRecordId)
+            （判卷逻辑见下方 AI自动批阅接口）
+    注意事项：
+        1.提交后自动触发判卷，前端不需要再单独调批阅接口
+        2.判卷是同步的，如果 AI 调用慢可能会导致接口响应慢
+          生产环境建议改成异步（消息队列）
+=============================================================================
+4.AI自动批阅接口
+    接口分析：
+        参数：path -> examRecordId
+        响应：批阅完成的 ExamRecord 对象
+    业务分析：
+        这是考试模块最核心的业务逻辑
+        遍历每道题，分题型判分：
+          选择题/判断题 → 答案直接比对（客观题）
+          简答题 → 调用 Kimi AI 判分（主观题）
+        判完后生成 AI 总评语
+    实现过程：
+        1.获取考试记录+试卷+答题记录（复用详情接口）
+        2.试卷 null → 标记"已批阅"，写死评语，返回
+        3.答题记录空 → 分数=0，评语="没有提交记录"，返回
+        4.将试卷题目转成 Map<题目ID, 题目对象>（方便快速取正确答案）
+        5.遍历每道答题记录，try-catch 保护：
+            a.取该题的标准答案 systemAnswer
+            b.判断题答案标准化：T/F → TRUE/FALSE（normalizeJudgeAnswer）
+            c.选择题/判断题(不是TEXT)：
+                用户答案.equalsIgnoreCase(标准答案) → isCorrect=1, 满分
+                不匹配 → isCorrect=0, 0分
+            d.简答题(TEXT)：
+                调 kimiAiService.gradingTextQuestion(题目, 用户答案, 满分)
+                AI返回 {score, feedback, reason}
+                满分 → isCorrect=1，0分 → isCorrect=0，其他 → isCorrect=2
+            e.累加 totalScore、correctNumber
+            f.更新该条答题记录
+        6.批量更新答题记录：answerRecordService.updateBatchById()
+        7.调 AI 生成总评语：
+            kimiAiService.buildSummary(总分, 满分, 总题数, 正确数)
+        8.更新考试记录：score, answers(总评语), status="已批阅"
+        9.返回 examRecord
+    注意事项：
+        1.判断题答案要先标准化（normalizeJudgeAnswer）：T/True/正确→TRUE，F/False/错→FALSE
+        2.判卷循环里用 try-catch 包裹，一道题判错了不影响其他题
+        3.AI判简答题时，返回的分数不能超过满分，不能为负数（代码里做边界保护）
+        4.AI判卷提示词要包含：题目内容、标准答案、学生答案、满分值、评分标准
+        5.简答题 isCorrect 三种状态：0=全错, 1=全对, 2=部分正确
+=============================================================================

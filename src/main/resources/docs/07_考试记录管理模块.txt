@@ -1,0 +1,121 @@
+1.分页查询考试记录列表接口
+    接口分析：
+        参数：
+            query ->
+                page（默认1）、size（默认20）
+                studentName（学生姓名模糊查询）
+                status（0=进行中, 1=已完成, 2=已批阅）
+                startDate、endDate（时间范围 yyyy-MM-dd）
+        响应：
+            {
+                data: {
+                    records: [{ 考试记录 + paper试卷信息 }],
+                    total, current, size, pages
+                }
+            }
+    业务分析：
+        管理端查看所有考试记录，支持多条件组合筛选
+        查询结果中的每条记录需要关联显示试卷名称和总分
+        后端处理：先查 exam_records → 提取 paperId 列表 → 批量查 paper → 组装
+    实现过程：
+        1.创建 Page 对象
+        2.构建 LambdaQueryWrapper：
+            like(studentName不为空, ExamRecord::getStudentName, studentName)
+            status 数字转字符串：0→"进行中", 1→"已完成", 2→"已批阅"
+            ge(startDate不为空, ExamRecord::getStartTime, startDate)
+            le(endDate不为空, ExamRecord::getStartTime, endDate)
+        3.examService.page(myPage, queryWrapper) 分页查询
+        4.提取 paperId 列表：records.stream().map(ExamRecord::getExamId)
+        5.批量查 paper 表：paperService.list(WHERE id IN (paperIdList))
+        6.paper 列表 → Map<paperId, Paper>
+        7.循环 records，从 Map 取 Paper set 进去（解决 N+1 问题）
+        8.返回 myPage
+    注意事项：
+        1.status 前端传的是数字(0/1/2)，后端要转成字符串("进行中"/"已完成"/"已批阅")
+        2.批量查 paper 再组装，避免每条考试记录都去查一次 paper（N+1问题）
+        3.日期筛选用 ge(startDate) 和 le(endDate)，查询某时间范围内的记录
+=============================================================================
+2.获取考试记录详情接口
+    接口分析：
+        参数：path -> id（考试记录ID）
+        响应：
+            {
+                data: {
+                    考试记录 + paper试卷(含题目) + answerRecords答题记录
+                }
+            }
+    业务分析：
+        与考试管理模块中的"查询考试记录详情"是同一个逻辑
+        直接调用 examService.customGetExamRecordById(id) 复用
+        返回考试记录+试卷详情+答题记录+AI评语
+    实现过程：
+        1.调用 examService.customGetExamRecordById(id)
+        2.内部实现（参考 06_考试管理模块 第2个接口）：
+            a.查考试记录
+            b.查试卷详情（含题目）
+            c.查答题记录（按试卷题目顺序排序）
+            d.组装返回
+    注意事项：
+        1.这个接口和 /api/exams/{id} 功能相同，两个 Controller 共用同一套 Service
+        2.如果考试记录找不到或试卷被删，要抛异常
+=============================================================================
+3.删除考试记录接口
+    接口分析：
+        参数：path -> id
+        响应：操作结果消息
+    业务分析：
+        删除指定考试记录，同时删除关联的答题记录
+        "进行中"的考试记录不能删除
+        这里是物理删除（不是逻辑删除）
+    实现过程：
+        1.查考试记录：getById(id)
+        2.状态校验：status == "进行中" → 抛异常"正在考试中，无法删除"
+        3.删除自身：removeById(id)  → DELETE FROM exam_records WHERE id=?
+        4.删除关联答题记录：answerRecordService.remove(WHERE exam_record_id = id)
+        5.返回成功
+    注意事项：
+        1.进行中的考试不能删，防止学生在考试中途数据丢失
+        2.答题记录要一起删，否则会有孤儿数据
+        3.这里是物理删除，exam_records 和 answer_record 表没有配置逻辑删除
+        4.需要 @Transactional 保证两张表的删除一致性
+=============================================================================
+4.获取考试排行榜接口
+    接口分析：
+        参数：
+            query ->
+                paperId（可选，按试卷筛选）
+                limit（可选，限制返回数量）
+        响应：
+            {
+                data: [
+                    {
+                        id, studentName, score,
+                        paperName, paperTotalScore,
+                        startTime, endTime, duration(用时分钟)
+                    }
+                ]
+            }
+    业务分析：
+        展示成绩排行榜，按分数降序、用时升序排列
+        需要关联 paper 表拿试卷名称和总分
+        用一条 JOIN SQL 搞定，性能最优
+    实现过程：
+        1.调用 examRecordMapper.customQueryRanking(paperId, limit)
+        2.Mapper XML 中写 SQL：
+            SELECT er.*, pr.name AS paper_name, pr.total_score AS paper_total_score,
+                   TIMESTAMPDIFF(MINUTE, er.start_time, er.end_time) AS duration
+            FROM exam_records er
+            LEFT JOIN paper pr ON er.exam_id = pr.id
+            WHERE er.is_deleted = 0 AND pr.is_deleted = 0
+              AND er.status = '已批阅'
+              可选：AND pr.id = #{paperId}
+            ORDER BY er.score DESC, duration ASC
+            可选：LIMIT #{limit}
+        3.返回 List<ExamRankingVO>
+    注意事项：
+        1.只显示"已批阅"的记录，进行中和已完成（未批阅）的不上榜
+        2.排序规则：分数高的排前面，分数相同用时短的排前面
+        3.使用 TIMESTAMPDIFF 在数据库层计算用时，比在 Java 里算高效
+        4.返回的是扁平 VO 对象（ExamRankingVO），不是嵌套的 ExamRecord
+          这样做是为了减少数据量和前端解析复杂度
+=============================================================================

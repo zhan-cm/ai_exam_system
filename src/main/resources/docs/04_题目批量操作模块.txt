@@ -1,0 +1,151 @@
+1.下载Excel导入模板接口
+    接口分析：
+        参数：无
+        响应：xlsx 文件（二进制流下载）
+    业务分析：
+        提供一个标准的 Excel 模板文件给管理员下载
+        管理员按照模板格式填写题目后，再上传导入
+        模板包含：题目内容、题目类型、是否多选、分类ID、难度、分值、选项A-D、正确答案、解析
+        第一行是表头，第二行是示例数据
+    实现过程：
+        1.调用 ExcelUtil.generateTemplate() 生成模板字节数组
+            POI 创建 XSSFWorkbook → 创建 Sheet → 写表头行 → 写示例数据行 → 转 byte[]
+        2.封装 ResponseEntity 返回
+            ResponseEntity.ok()
+                .header("Content-Disposition", "attachment;filename=question_import_template.xlsx")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(template)
+        3.浏览器收到响应后自动触发文件下载
+    注意事项：
+        1.接口返回类型是 ResponseEntity<byte[]>，不是 Result
+          因为文件下载需要设置响应头，不能用统一的 JSON 返回格式
+        2.contentType 用 APPLICATION_OCTET_STREAM（二进制流），浏览器才会触发下载而不是预览
+        3.示例数据行可以帮管理员快速理解每列填什么
+=============================================================================
+2.预览Excel文件内容接口
+    接口分析：
+        参数：form-data -> file（Excel文件）
+        响应：
+            {
+                data: [
+                    {
+                        title, type, multi, categoryId, difficulty, score,
+                        choices: [{content, isCorrect, sort}],
+                        answer, analysis
+                    }
+                ]
+            }
+    业务分析：
+        管理员上传 Excel 后，先解析预览，确认无误再正式导入
+        这一步只解析不存库，相当于"试运行"
+        需要校验文件格式（只允许 .xls 和 .xlsx）
+    实现过程：
+        1.校验文件
+            file 不能为空
+            文件名必须以 .xls 或 .xlsx 结尾，否则抛异常
+        2.调用 ExcelUtil.parseExcel(file) 解析
+            POI 根据扩展名创建 XSSFWorkbook(.xlsx) 或 HSSFWorkbook(.xls)
+            获取第一个 Sheet
+            从第二行开始读数据（第一行是表头）
+            每行按列序读取：
+              列0→title，列1→type，列2→是否多选，列3→categoryId
+              列4→difficulty，列5→score
+              列6-9→选项ABCD，列10→正确答案，列11→analysis
+            选择题：遍历选项列，构造 ChoiceImportDto 列表
+            判断题/简答题：列10 直接作为 answer
+        3.返回解析出的 QuestionImportVo 列表给前端预览
+    注意事项：
+        1.文件格式校验必须在解析前做，防止非 Excel 文件导致解析异常
+        2.数字类型单元格(NUMERIC)要特殊处理，转成字符串再解析
+        3.空行跳过（row == null → continue）
+        4.标题或类型为空的行跳过不入列表
+=============================================================================
+3.批量导入题目接口（通用）
+    接口分析：
+        参数：JSON数组 -> List<QuestionImportVo>（支持Excel解析后或AI生成后传入）
+        响应：成功导入 N 道 / 总共 M 道
+    业务分析：
+        这是一个通用接口，Excel导入和AI生成都走这个入口最终入库
+        逐条调用 saveQuestion，部分失败不影响其他数据（try-catch）
+        Vo → Question 转换是关键步骤
+    实现过程：
+        1.校验：题目集合不能为空
+        2.循环处理每条题目
+            try:
+                a.调用 convertQuestionImportVoToQuestion(vo) 将 Vo 转成 Question 实体
+                b.调用 saveQuestion(question) 保存（复用题目管理模块的保存方法）
+                c.successCount++
+            catch:
+                记录日志，跳过这条，继续处理下一条
+        3.返回成功导入的数量
+    Vo转Question的过程（convertQuestionImportVoToQuestion）：
+        a.BeanUtils.copyProperties(vo, question) 拷贝同名字段
+        b.选择题：遍历 vo.choices → 构造 QuestionChoice 列表 → setChoices
+        c.不管什么题型都创建 QuestionAnswer：
+          判断题 answer 转大写(.toUpperCase())
+          其他题型直接 set
+    注意事项：
+        1.逐条 try-catch 保证部分成功（不是全部成功或全部失败）
+        2.判断题型是判断题时，答案要 .toUpperCase() 统一转大写
+          因为前端可能传 "true"/"True"/"TRUE"，数据库统一存 "TRUE"
+        3.复用了已有的 saveQuestion 方法，不需要重复写保存逻辑
+=============================================================================
+4.从Excel文件批量导入接口
+    接口分析：
+        参数：form-data -> file（Excel文件）
+        响应：成功导入 N 道 / 总共 M 道
+    业务分析：
+        这是"预览"+"通用导入"二合一
+        先解析 Excel → 再调用 importBatchQuestions 批量存库
+    实现过程：
+        1.校验文件格式（同预览接口）
+        2.ExcelUtil.parseExcel(file) 解析文件
+        3.调用 importBatchQuestions(questionImportVoList) 批量入库
+        4.返回导入结果描述
+    注意事项：
+        1.本质是"预览+通用导入"的组合，代码复用了 parseExcel 和 importBatchQuestions
+        2.前端这个按钮已被屏蔽，主流流程是"预览→确认→通用导入"
+=============================================================================
+5.AI智能生成题目接口
+    接口分析：
+        参数：JSON ->
+            {
+                topic: "题目主题",
+                count: 数量,
+                types: "CHOICE,JUDGE,TEXT",
+                difficulty: "MEDIUM",
+                categoryId: 分类ID,
+                requirements: "额外要求"
+            }
+        响应：List<QuestionImportVo>（预览用，不入库）
+    业务分析：
+        管理员告诉AI"主题+题型+数量+难度"，AI自动出题
+        AI出的是预览数据，管理员确认后再走"通用导入"接口入库
+        核心流程：接收参数 → 构建提示词 → WebClient调Kimi → 解析JSON结果
+    实现过程：
+        1.构建提示词(buildPrompt)
+            根据请求参数拼接：
+              "请生成N道关于【主题】的题目"
+              类型要求：选择题(含单选多选) / 判断题(答案TRUE/FALSE要平衡) / 简答题
+              难度要求：简单/中等/困难
+              返回要求：严格按JSON格式返回，不要额外文字
+        2.调用Kimi API(callKimiAi)
+            a.构建请求体：model + messages(含提示词) + temperature + max_tokens
+            b.webClient.post() 发请求 → .block() 同步等待结果
+            c.解析响应：取 choices[0].message.content 字段
+            d.失败重试机制：最多3次，每次失败等1秒再试
+        3.解析AI返回的JSON结果(aiGenerateQuestions)
+            a.从 content 中截取 ```json ... ``` 之间的 JSON 字符串
+            b.JSONObject 解析 → 获取 "questions" 数组
+            c.遍历数组，逐条转成 QuestionImportVo：
+              选择题 → 解析 choices 数组
+              判断题 → 解析 answer 字段
+              统一设置 categoryId 为请求中的分类ID
+        4.返回 QuestionImportVo 列表给前端
+    注意事项：
+        1.AI返回的文本可能包含 ```json 标记，需要截取中间部分
+          用 indexOf("```json") 和 lastIndexOf("```") 定位
+        2.重试机制只能处理"假失败"（网络波动、限流），"真失败"（API Key错误）重试也没用
+        3.WebClient 是异步的，通过 .block() 转同步等待结果
+        4.提示词质量直接影响AI出题质量，尤其是JSON格式约束要写清楚
+=============================================================================

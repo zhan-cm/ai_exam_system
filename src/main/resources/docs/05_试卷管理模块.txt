@@ -1,0 +1,179 @@
+1.获取试卷列表接口
+    接口分析：
+        参数：query -> name（名称模糊查询）、status（状态筛选 DRAFT/PUBLISHED/STOPPED）
+        响应：
+            {
+                data: [
+                    {
+                        id, name, description, status, totalScore,
+                        questionCount, duration, createTime
+                    }
+                ]
+            }
+    业务分析：
+        管理端展示所有试卷，支持按名称模糊搜索和状态筛选
+        单表查询 paper 表，不关联题目
+        MyBatis Plus 自带方法直接搞定，不需要写 SQL
+    实现过程：
+        1.构建 LambdaQueryWrapper
+            like(name不为空, Paper::getName, name)
+            eq(status不为空, Paper::getStatus, status)
+        2.paperService.list(queryWrapper) 直接查
+        3.返回列表
+    注意事项：
+        1.试卷默认按创建时间倒序（DRAFT状态的通常是最新的）
+        2.不需要返回试卷里的题目列表，列表页只看基本信息
+=============================================================================
+2.获取试卷详情接口
+    接口分析：
+        参数：path -> id（试卷ID）
+        响应：
+            {
+                data: {
+                    试卷基本信息,
+                    questions: [
+                        {
+                            题目对象（含 choices、answer、paperScore）
+                        }
+                    ]
+                }
+            }
+    业务分析：
+        展示试卷完整内容：基本信息 + 所有题目 + 每道题在试卷中的分值
+        涉及三张表：paper + paper_question + questions
+        需要多表关联查询，用 Mapper XML 写 JOIN
+        题目要按题型排序（选择→判断→简答）
+    实现过程：
+        1.单表查 paper：getById(id)，null则抛异常
+        2.根据 paperId 查题目集合（Mapper XML JOIN 三表）
+            paper_question JOIN questions JOIN question_answers LEFT JOIN question_choices
+            WHERE paper_id = #{paperId}
+            用嵌套结果 resultMap，一次 SQL 把题目+答案+选项全查出来
+            （这里用嵌套结果没问题，因为不是分页查询）
+        3.题目排序：选择(1) → 判断(2) → 简答(3)
+            typeToInt 方法：CHOICE→1, JUDGE→2, TEXT→3
+        4.setQuestions(questionList) 返回
+    注意事项：
+        1.题目集合为空时赋空 List，不要返回 null
+        2.题目排序用 switch 把类型转成数字再 compare
+        3.详情接口不怕嵌套结果，因为只查一张试卷，没有分页问题
+=============================================================================
+3.手动创建试卷接口
+    接口分析：
+        参数：JSON ->
+            {
+                name, description, duration,
+                questions: { "题目ID": 分值, "题目ID2": 分值 }
+            }
+        响应：创建好的 Paper 对象
+    业务分析：
+        管理员手动选题，为每道题指定分值
+        操作 paper + paper_question 两张表
+        需要事务保护
+    实现过程：
+        1.创建 Paper 对象，从 Vo 拷贝 name、description、duration
+        2.设置默认值：status = "DRAFT"
+        3.计算并设置：
+            questionCount = questions.size()
+            totalScore = questions.values() 求和（Stream reduce）
+        4.save(paper) 获得自增ID
+        5.遍历 questions Map，构建 PaperQuestion 列表
+            Map.entrySet → stream → map → PaperQuestion(paperId, questionId, score)
+        6.paperQuestionService.saveBatch(paperQuestionList) 批量插入中间表
+        7.返回 paper
+    注意事项：
+        1.创建后试卷状态默认是 DRAFT（草稿），要发布才能用于考试
+        2.如果 questions 为空，totalScore 和 questionCount 都设为 0
+        3.整个方法需要 @Transactional，保证 paper 和 paper_question 同时成功或失败
+================================================================
+=============================================================================
+4.AI智能组卷接口
+    接口分析：
+        参数：JSON ->
+            {
+                name, description, duration,
+                rules: [
+                    { type: "CHOICE", categoryIds: [16,17], count: 5, score: 10 },
+                    { type: "JUDGE", categoryIds: [21],    count: 5, score: 5  },
+                    { type: "TEXT",  categoryIds: [24],    count: 1, score: 25 }
+                ]
+            }
+        响应：创建好的 Paper 对象
+    业务分析：
+        管理员只需定义"规则"（哪种题型、哪些分类、出几道、每道几分）
+        系统自动从题库中随机抽题并组卷
+        核心算法：按规则查候选题目 → Collections.shuffle 随机打乱 → 截取需要数量
+    实现过程：
+        1.创建 Paper，拷贝基本信息，status = "DRAFT"，save 入库
+        2.定义 totalQuestionCount = 0, totalScore = 0
+        3.遍历 rules 列表，对每条规则：
+            a.count == 0 → 跳过
+            b.按 type 和 categoryIds 查符合条件的所有题目
+            c.查出来的题目集合为空 → warn 日志，跳过
+            d.realNumbers = min(count, 实际可用题目数)
+            e.累加 totalQuestionCount += realNumbers
+            f.累加 totalScore += realNumbers × rule.score
+            g.Collections.shuffle(allQuestionList) 随机打乱
+            h.subList(0, realNumbers) 截取需要的数量
+            i.转成 PaperQuestion 列表 → saveBatch 入库
+        4.updateById 更新 paper 的 totalScore 和 questionCount
+        5.返回 paper
+    注意事项：
+        1.规则中 count 不能大于实际题目数，取 Math.min
+        2.分类列表为空时，.in() 条件不应该生效（用 !ObjectUtils.isEmpty 判断）
+        3.实际抽取的题目可能少于规则要求（题库不足），要做好容错
+        4.Stream 的 .toList() 返回不可变列表，如需后续修改用 collect(Collectors.toList())
+=============================================================================
+5.更新试卷信息接口
+    接口分析：
+        参数：path -> id + JSON -> PaperVo
+        响应：更新后的 Paper 对象
+    业务分析：
+        编辑已有试卷：修改基本信息 + 修改题目组成
+        用"删除+插入"策略更新中间表
+        已发布的试卷不能修改
+    实现过程：
+        1.校验：已发布(PUBLISHED)的试卷不能修改
+        2.校验：新名称不能和其他试卷重名
+            WHERE name = 新名称 AND id <> 当前ID
+        3.updateById(paper) 更新主表
+        4.删除旧中间表：paperQuestionService.remove(WHERE paper_id = id)
+        5.重新插入中间表：同手动创建的逻辑
+        6.更新 totalScore 和 questionCount
+    注意事项：
+        1.中间表用"删除+插入"策略，简单可靠
+        2.已发布试卷禁止修改，防止考试进行中试卷变更
+=============================================================================
+6.更新试卷状态接口
+    接口分析：
+        参数：path -> id + query -> status（PUBLISHED / STOPPED）
+        响应：操作结果消息
+    业务分析：
+        发布：DRAFT → PUBLISHED，学生就能看到并参加考试
+        停用：PUBLISHED → STOPPED，学生无法再参加该考试
+    实现过程：
+        1.查 paper 确认存在
+        2.paper.setStatus(newStatus)
+        3.updateById(paper)
+    注意事项：
+        1.状态流转要合法：DRAFT→PUBLISHED→STOPPED，不能逆向
+        2.DRAFT 不能直接 STOPPED，必须先发布
+=============================================================================
+7.删除试卷接口
+    接口分析：
+        参数：path -> id
+        响应：操作结果消息
+    业务分析：
+        只允许删除 DRAFT 状态、且没有被考试记录引用的试卷
+        级联删除中间表数据
+    实现过程：
+        1.查试卷，PUBLISHED 状态 → 抛异常"不能删除"
+        2.查 exam_records 表，count(exam_id = 当前试卷ID)
+            count > 0 → 抛异常"有N条考试记录引用了该试卷，不能删除"
+        3.removeById(id) 逻辑删除 paper
+        4.paperQuestionService.remove(WHERE paper_id = id) 删除中间表
+    注意事项：
+        1.已发布的试卷不能删（有学生在考试）
+        2.有考试记录的试卷不能删（数据关联）
+        3.删除要同时处理 paper 和 paper_question 两张表
+=============================================================================
